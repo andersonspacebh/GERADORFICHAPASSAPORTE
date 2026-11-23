@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fichas de passaporte</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Source+Serif+4:opsz,wght@8..60,600&display=swap" rel="stylesheet">
+<style>
+/* VOICE: calmo, de escritório — um formulário de consulado bem feito.
+   IDEA: a ficha consular em papel; cada pessoa é uma "ficha" empilhada.
+   PICTURE: o próprio formulário, em uma coluna, com as fichas de cada pessoa.
+   COLOUR and TYPE: branco, tinta #121212, vermelho #c8102e (tricolore) como único acento; Source Serif 4 + Inter.
+   LAYOUT: coluna única de até 760px; barra de geração fixa no rodapé. */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#10191e);--ink:light-dark(#121212,#eef1f3);--mut:light-dark(#5b6670,#9fb0bb);--line:light-dark(#d9dee2,#2b3a43);--panel:light-dark(#f3f6f8,#16232a);--acc:#c8102e;--acc2:light-dark(#2e6f8e,#7fb4cf);--field:light-dark(#fff,#0d1519)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 Inter,system-ui,sans-serif;overflow-x:clip}
+.wrap{max-width:760px;margin:0 auto;padding:clamp(20px,4vw,48px) max(4vw,14px) 140px}
+.tab{display:inline-block;background:var(--acc);color:#fff;font-weight:600;font-size:13px;padding:3px 10px;border-radius:2px}
+h1{font:600 clamp(30px,6vw,44px)/1.05 "Source Serif 4",Georgia,serif;margin:12px 0 8px;text-wrap:balance}
+.lede{color:var(--mut);margin:0 0 24px;max-width:62ch}
+section{border-top:2px solid var(--ink);padding:18px 0 26px}
+h2{font:600 22px/1.2 "Source Serif 4",Georgia,serif;margin:0 0 4px}
+.hint{color:var(--mut);font-size:14px;margin:0 0 14px}
+.grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px 12px}
+.c2{grid-column:span 2}.c3{grid-column:span 3}.c4{grid-column:span 4}.c6{grid-column:span 6}.c1{grid-column:span 1}
+@media(max-width:600px){.c2,.c3,.c4{grid-column:span 6}.c1{grid-column:span 2}.half{grid-column:span 3}}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:13px;font-weight:500;color:var(--mut)}
+input,select{font:16px Inter,system-ui,sans-serif;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:6px;padding:10px 11px;min-height:44px;width:100%}
+input:focus,select:focus,button:focus-visible{outline:2px solid var(--acc2);outline-offset:1px}
+.chk{display:flex;align-items:center;gap:10px;font-size:15px;min-height:44px;cursor:pointer}
+.chk input{width:22px;height:22px;min-height:0;accent-color:var(--acc)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;margin:0 0 14px}
+.card header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.card h3{margin:0;font-size:17px;font-weight:600}
+.card h3 small{font-weight:400;color:var(--mut);font-size:14px}
+.sub{grid-column:span 6;font-size:13px;font-weight:600;color:var(--acc2);margin-top:6px;border-top:1px dashed var(--line);padding-top:10px}
+button{font:500 15px Inter,system-ui,sans-serif;min-height:44px;padding:0 16px;border-radius:6px;border:1px solid var(--line);background:var(--field);color:var(--ink);cursor:pointer}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+button.del{border:0;background:none;color:var(--mut);padding:0 8px;font-size:14px}
+button.add{width:100%;border-style:dashed}
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:10px max(4vw,14px) calc(10px + env(safe-area-inset-bottom))}
+.bar .in{max-width:760px;margin:0 auto;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .msg{flex:1 1 200px;font-size:14px;color:var(--mut)}
+.bar .msg b{color:var(--ink)}
+#prev{display:grid;gap:14px;margin-top:8px}
+#prev canvas{width:100%;height:auto;border:1px solid var(--line);background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.empty{color:var(--mut);font-size:14px;padding:6px 0 14px}
+.err{color:var(--acc)}
+textarea{font:16px/1.45 Inter,system-ui,sans-serif;color:var(--ink);background:var(--field);border:1px solid var(--line);border-radius:6px;padding:10px 11px;width:100%;resize:vertical}
+textarea:focus{outline:2px solid var(--acc2);outline-offset:1px}
+.paste{background:var(--panel);border-top-color:var(--acc);padding-inline:14px;border-radius:0 0 10px 10px;margin-bottom:10px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-top:8px}
+.soM{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:6px 12px;margin-bottom:14px;font-weight:500}
+.off .ficha{opacity:.45;pointer-events:none}
+.tpl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:18px;display:none}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <span class="tab">Consolato · Belo Horizonte</span>
+  <h1>Fichas de passaporte</h1>
+  <p class="lede">Digite os dados uma vez: o gerador preenche a ficha do maior, a ficha de cada menor (com os dados dos pais) e o atto di assenso, tudo em um único PDF. Nada sai do seu aparelho.</p>
+
+  <div class="tpl" id="tpl">
+    <p style="margin:0 0 8px"><b>Modelo em branco não carregou.</b> Selecione o PDF "Fichas formulários passaporte – maior e menor":</p>
+    <input type="file" id="tplFile" accept="application/pdf">
+  </div>
+
+  <section class="paste">
+    <h2>Colar dados do cliente</h2>
+    <p class="hint">Cole aqui a mensagem do cliente (WhatsApp, e-mail, cadastro) e toque em <b>Organizar</b>. Os dados vão para os campos abaixo; confira antes de gerar. Para nomes compostos, o mais seguro é separar: <i>Nome: Ana Luísa</i> e <i>Sobrenome: Souza Lima</i>.</p>
+    <textarea id="colar" rows="6" placeholder="Ex.: Nome completo: Aline Souza Lima&#10;Nascimento: 12/05/1990 em Belo Horizonte/MG&#10;Endereço: Rua ..., 120, Bairro ... CEP 30000-000&#10;Cel: (31) 99999-0000"></textarea>
+    <div class="row">
+      <label class="chk"><input type="checkbox" id="colarNova" checked>Começar família nova</label>
+      <button class="pri" id="organizar">Organizar dados</button>
+    </div>
+    <p class="hint" id="colarMsg" style="margin:6px 0 0"></p>
+  </section>
+
+  <section>
+    <h2>Endereço e contato da família</h2>
+    <p class="hint">Vale para todas as fichas. Celular e e-mail podem ser trocados por pessoa, lá embaixo.</p>
+    <div class="grid">
+      <label class="f c6">Endereço (rua, número, complemento, bairro)<input data-k="end.rua" autocomplete="off"></label>
+      <label class="f c3">Cidade<input data-k="end.cidade"></label>
+      <label class="f c1 half">UF<input data-k="end.uf" maxlength="2"></label>
+      <label class="f c2 half">CEP<input data-k="end.cep" inputmode="numeric" data-mask="cep"></label>
+      <label class="f c1 half">DDD tel.<input data-k="end.ddd" inputmode="numeric" maxlength="2"></label>
+      <label class="f c2 half">Telefone fixo<input data-k="end.tel" inputmode="tel"></label>
+      <label class="f c1 half">DDD cel.<input data-k="end.dddCel" inputmode="numeric" maxlength="2"></label>
+      <label class="f c2 half">Celular<input data-k="end.cel" inputmode="tel"></label>
+      <label class="f c6">E-mail<input data-k="end.email" type="email" autocapitalize="off"></label>
+    </div>
+  </section>
+
+  <section>
+    <h2>Adultos</h2>
+    <p class="hint">Pai, mãe e requerentes maiores. Desmarque "gerar ficha de maior" para quem só aparece como genitor (por exemplo, pai que não é requerente).</p>
+    <label class="chk soM"><input type="checkbox" data-k="opts.soMenores">Agendamento só dos menores (não gerar nenhuma ficha de maior)</label>
+    <div id="adultos"></div>
+    <button class="add" id="addA">+ Adicionar adulto</button>
+  </section>
+
+  <section>
+    <h2>Menores</h2>
+    <p class="hint">Escolha o pai e a mãe entre os adultos acima. Marque quem assina o atto di assenso (o genitor que não vai ao consulado).</p>
+    <div id="menores"></div>
+    <button class="add" id="addM">+ Adicionar menor</button>
+  </section>
+
+  <section>
+    <h2>Opções</h2>
+    <div class="grid">
+      <label class="chk c3"><input type="checkbox" data-k="opts.caps">Preencher em MAIÚSCULAS</label>
+      <label class="chk c3"><input type="checkbox" data-k="opts.checklist">Incluir as páginas de check list</label>
+      <label class="f c3">Data das assinaturas (opcional)<input data-k="opts.dataAss" inputmode="numeric" placeholder="dd/mm/aaaa" data-mask="date"></label>
+      <div class="c3" style="display:flex;align-items:end"><button id="limpar" style="width:100%">Nova família (limpar tudo)</button></div>
+    </div>
+  </section>
+
+  <section id="prevSec" style="display:none">
+    <h2>Prévia</h2>
+    <p class="hint">Confira o alinhamento antes de imprimir.</p>
+    <div id="prev"></div>
+  </section>
+</div>
+
+<div class="bar"><div class="in">
+  <div class="msg" id="msg">Preencha os dados e toque em <b>Gerar PDF</b>.</div>
+  <button class="pri" id="gerar">Gerar PDF</button>
+  <button id="baixar" style="display:none">Baixar PDF</button>
+</div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+/* Motor de preenchimento — fichas do Consolato Generale d'Italia Belo Horizonte.
+   Páginas do modelo (0-based): 0 checklist maior, 1 ficha maior, 2 checklist menor,
+   3 ficha menor, 4 atto di assenso (5 = cópia idêntica). Coordenadas em pt, y medido do topo
+   até a linha de base do texto. */
+function buildFichas(PDFLib, templateBytes, S) {
+  const { PDFDocument, StandardFonts, rgb } = PDFLib;
+  return (async () => {
+    const src = await PDFDocument.load(templateBytes);
+    const out = await PDFDocument.create();
+    const font = await out.embedFont(StandardFonts.Helvetica);
+    const H = 841.92;
+    const ink = rgb(0.05, 0.12, 0.42);
+    const up = (t) => { t = (t == null ? '' : String(t)).trim().replace(/\s+/g, ' '); return S.opts.caps ? t.toLocaleUpperCase('pt-BR') : t; };
+    const safe = (t) => t.replace(/[^\x20-\x7E -ÿŒœ–—‘’“”]/g, '');
+
+    function put(pg, text, x, y, w, o = {}) {
+      text = safe(o.raw ? String(text || '') : up(text));
+      if (!text) return;
+      let size = o.size || 10;
+      while (size > 5.5 && font.widthOfTextAtSize(text, size) > w) size -= 0.25;
+      const tw = font.widthOfTextAtSize(text, size);
+      const dx = o.center ? Math.max(0, (w - tw) / 2) : 0;
+      pg.drawText(text, { x: x + dx, y: H - y, size, font, color: ink });
+    }
+    const mark = (pg, x0, x1, y) => put(pg, 'X', x0, y, x1 - x0, { center: true, size: 9, raw: true });
+    function date(pg, str, segs, y) {
+      const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((str || '').trim());
+      if (!m) return;
+      [m[1].padStart(2, '0'), m[2].padStart(2, '0'), m[3]].forEach((v, i) =>
+        put(pg, v, segs[i][0], y, segs[i][1] - segs[i][0], { center: true, raw: true }));
+    }
+    const sx = (v) => ({ M: 'Masculino', F: 'Feminino' }[v] || v || '');
+    const E = S.end;
+    const cidadeUF = () => [E.cidade, E.uf].filter(Boolean).join(' - ');
+    const enderecoCompleto = () => [E.rua, cidadeUF(), E.cep ? 'CEP ' + E.cep : ''].filter(Boolean).join(', ');
+    const byId = (id) => S.adultos.find((a) => a.id === id);
+    const filhosDe = (a) => S.menores.filter((m) => m.pai === a.id || m.mae === a.id).length;
+    async function add(i) { const [p] = await out.copyPages(src, [i]); out.addPage(p); return p; }
+
+    /* ---------- ficha maior ---------- */
+    for (const a of S.adultos) {
+      if (!a.ficha || S.opts.soMenores) continue;
+      if (S.opts.checklist) await add(0);
+      const p = await add(1);
+      put(p, a.sobrenome, 128, 119.2, 192);
+      put(p, a.nome, 336, 119.2, 113);
+      put(p, a.nascLocal, 62, 155.9, 250);
+      date(p, a.nascData, [[322, 346], [351, 391], [395, 445]], 155.9);
+      put(p, E.rua, 112, 192.5, 337);
+      put(p, cidadeUF(), 25, 216.9, 290);
+      put(p, E.cep, 330, 216.9, 120, { raw: true });
+      put(p, E.ddd, 48, 265.7, 20, { center: true, raw: true });
+      put(p, E.tel, 74, 265.7, 166, { raw: true });
+      const cel = a.cel || E.cel, ddd = a.cel ? a.dddCel : E.dddCel;
+      put(p, ddd, 312, 265.7, 15, { center: true, raw: true, size: 9 });
+      put(p, cel, 332, 265.7, 118, { raw: true });
+      put(p, (a.email || E.email || '').trim(), 147, 302.3, 307, { raw: true });
+      put(p, a.altura, 55, 338.9, 78, { raw: true });
+      put(p, a.olhos, 210, 338.9, 138);
+      put(p, sx(a.sexo), 375, 338.9, 78);
+      const ec = { solteiro: [123, 133], casado: [184, 194], divorciado: [261, 271], separado: [338, 348], viuvo: [410, 420], uniao: [476, 486] }[a.estado];
+      if (ec) mark(p, ec[0], ec[1], 375.6);
+      if (a.usarConiuge && a.coniuge) { mark(p, 340, 355, 412.2); put(p, a.coniuge, 362, 412.2, 202); }
+      const opc = a.filhosOpc || 'auto';
+      const nf = opc === 'nao' ? 0 : (a.filhos === '' || a.filhos == null ? filhosDe(a) : parseInt(a.filhos, 10) || 0);
+      if (opc === 'sim' || (opc === 'auto' && nf > 0)) { if (nf > 0) put(p, String(nf), 69, 511.1, 25, { center: true, raw: true }); mark(p, 187, 202, 511.1); }
+      else mark(p, 456, 471, 511.1);
+      mark(p, 428, 443, 535.5); // NON avere minori affidati
+      date(p, S.opts.dataAss, [[45, 79], [86, 118], [126, 168]], 794.4);
+    }
+
+    /* ---------- ficha menor + atto di assenso ---------- */
+    for (const m of S.menores) {
+      if (S.opts.checklist) await add(2);
+      const p = await add(3);
+      const pai = byId(m.pai), mae = byId(m.mae);
+      put(p, m.sobrenome, 75, 125.3, 255);
+      put(p, m.nome, 333, 125.3, 109);
+      put(p, m.nascLocal, 62, 155.4, 250);
+      date(p, m.nascData, [[322, 350], [355, 384], [389, 442]], 155.4);
+      const pais = [[pai, 185.3, 216.3, 58], [mae, 246.3, 277.3, 66]];
+      for (const [g, y1, y2, x0] of pais) {
+        if (!g) continue;
+        put(p, g.sobrenome, x0, y1, 293 - x0);
+        put(p, g.nome, 297, y1, 148);
+        put(p, g.nascLocal, 62, y2, 250);
+        date(p, g.nascData, [[322, 355], [360, 393], [398, 447]], y2);
+      }
+      put(p, E.rua, 166, 307.2, 284);
+      put(p, cidadeUF(), 25, 334.9, 285);
+      put(p, E.cep, 317, 334.9, 133, { raw: true });
+      put(p, [E.ddd && '(' + E.ddd + ')', E.tel].filter(Boolean).join(' '), 43, 384.3, 193, { raw: true });
+      const g0 = mae || pai || {};
+      const cel = g0.cel ? [g0.dddCel && '(' + g0.dddCel + ')', g0.cel] : [E.dddCel && '(' + E.dddCel + ')', E.cel];
+      put(p, cel.filter(Boolean).join(' '), 278, 384.3, 174, { raw: true });
+      put(p, (g0.email || E.email || '').trim(), 149, 413, 304, { raw: true });
+      put(p, m.altura, 56, 441.8, 68, { raw: true });
+      put(p, m.olhos, 206, 441.8, 118);
+      put(p, sx(m.sexo), 355, 441.8, 99);
+      mark(p, 221, 236, 470.6);   // cittadino italiano SI
+      mark(p, 123, 133, 499.3);   // libero
+      mark(p, 444, 459, 528.1);   // NON pendenze penali
+      mark(p, 463, 478, 556.7);   // NON figli
+      if (pai) date(p, S.opts.dataAss, [[45, 74], [79, 108], [113, 160]], 631.5);
+      if (mae) date(p, S.opts.dataAss, [[45, 74], [79, 108], [113, 160]], 662.6);
+
+      for (const [flag, g] of [[m.assPai, pai], [m.assMae, mae]]) {
+        if (!flag || !g) continue;
+        const q = await add(4);
+        put(q, [g.nome, g.sobrenome].filter(Boolean).join(' '), 100, 272.2, 438);
+        put(q, g.nascLocal, 84, 299.6, 340);
+        date(q, g.nascData, [[434, 467], [472, 496], [501, 532]], 299.6);
+        put(q, enderecoCompleto(), 171, 327.2, 365);
+        put(q, g.docNum, 196, 354.6, 338, { raw: true });
+        put(q, g.docLocal, 86, 381.6, 322);
+        date(q, g.docData, [[417, 448], [453, 477], [482, 532]], 381.6);
+        put(q, m.sobrenome, 93, 503.6, 243);
+        put(q, m.nome, 365, 503.6, 166);
+        put(q, m.nascLocal, 82, 533.6, 320);
+        date(q, m.nascData, [[411, 442], [447, 471], [480, 530]], 533.6);
+        const end = enderecoCompleto();
+        // quebra o endereço em duas linhas se preciso
+        let l1 = up(end), l2 = '';
+        const fits = (t, w) => font.widthOfTextAtSize(safe(t), 10) <= w;
+        if (!fits(l1, 422)) {
+          const words = l1.split(' '); l1 = '';
+          while (words.length && fits((l1 + ' ' + words[0]).trim(), 422)) l1 = (l1 + ' ' + words.shift()).trim();
+          l2 = words.join(' ');
+        }
+        put(q, l1, 106, 564.1, 422, { raw: true });
+        put(q, l2, 106, 586.1, 422, { raw: true });
+        put(q, S.opts.dataAss, 78, 632, 110, { raw: true, center: true });
+      }
+    }
+    if (out.getPageCount() === 0) throw new Error('Nada para gerar: marque ao menos uma ficha de maior ou adicione um menor.');
+    out.setTitle('Fichas de passaporte');
+    return out.save();
+  })();
+}
+if (typeof module !== 'undefined') module.exports = { buildFichas };
+
+</script>
+<script>
+{
+const KEY = 'fichas-passaporte-rascunho';
+const uid = () => Math.random().toString(36).slice(2, 9);
+const novoAdulto = () => ({ id: uid(), sobrenome: '', nome: '', nascLocal: '', nascData: '', altura: '', olhos: '', sexo: '', estado: '', coniuge: '', usarConiuge: false, filhosOpc: 'auto', filhos: '', ficha: true, docNum: '', docLocal: '', docData: '', dddCel: '', cel: '', email: '' });
+const novoMenor = () => ({ id: uid(), sobrenome: '', nome: '', nascLocal: '', nascData: '', altura: '', olhos: '', sexo: '', pai: '', mae: '', assPai: false, assMae: false });
+const vazio = () => ({ opts: { caps: true, checklist: false, dataAss: '' }, end: { rua: '', cidade: '', uf: 'MG', cep: '', ddd: '', tel: '', dddCel: '', cel: '', email: '' }, adultos: [novoAdulto()], menores: [] });
+let S;
+try { S = JSON.parse(localStorage.getItem(KEY)) } catch (e) {}
+if (!S || !S.end) S = vazio();
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(S)) } catch (e) {} };
+let pdfBytes = null, template = null;
+
+const esc = (v) => String(v ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const OLHOS = ['Castanhos', 'Castanhos escuros', 'Castanhos claros', 'Pretos', 'Verdes', 'Azuis', 'Mel', 'Cinza'];
+const EST = [['', '—'], ['solteiro', 'Solteiro/a'], ['casado', 'Casado/a'], ['divorciado', 'Divorciado/a'], ['separado', 'Separado/a'], ['viuvo', 'Viúvo/a'], ['uniao', 'União estável']];
+const inp = (p, k, lab, cls, extra = '') => `<label class="f ${cls}">${lab}<input data-k="${p}.${k}" ${extra}></label>`;
+const sexo = (p, cls) => `<label class="f ${cls}">Sexo<select data-k="${p}.sexo"><option value="">—</option><option value="M">Masculino</option><option value="F">Feminino</option></select></label>`;
+const pessoa = (p) => inp(p, 'sobrenome', 'Sobrenome', 'c3') + inp(p, 'nome', 'Nome', 'c3') +
+  inp(p, 'nascLocal', 'Local de nascimento (cidade - UF)', 'c4') + inp(p, 'nascData', 'Data de nascimento', 'c2', 'inputmode="numeric" placeholder="dd/mm/aaaa" data-mask="date"') +
+  inp(p, 'altura', 'Altura', 'c1 half', 'inputmode="decimal" placeholder="1,70"') + inp(p, 'olhos', 'Cor dos olhos', 'c3 half', 'list="olhos"') + sexo(p, 'c2');
+
+function renderA() {
+  document.getElementById('adultos').innerHTML = S.adultos.map((a, i) => {
+    const p = 'adultos.' + i;
+    return `<div class="card"><header><h3>Adulto ${i + 1} <small>${esc([a.nome, a.sobrenome].filter(Boolean).join(' '))}</small></h3>${S.adultos.length > 1 ? `<button class="del" data-delA="${i}">Remover</button>` : ''}</header>
+    <div class="grid">
+      <label class="chk c6 ficha"><input type="checkbox" data-k="${p}.ficha">Gerar ficha de passaporte de maior</label>
+      ${pessoa(p)}
+      <label class="f c3">Estado civil<select data-k="${p}.estado">${EST.map(([v, t]) => `<option value="${v}">${t}</option>`).join('')}</select></label>
+      <label class="f c3">Filhos menores de 18 anos<select data-k="${p}.filhosOpc"><option value="auto">Automático (pelos menores abaixo)</option><option value="nao">Não tem filhos menores</option><option value="sim">Tem filhos menores</option></select></label>
+      ${inp(p, 'filhos', 'Quantos filhos menores', 'c3', 'inputmode="numeric" placeholder="se souber"')}
+      <label class="chk c3"><input type="checkbox" data-k="${p}.usarConiuge">Casada: incluir sobrenome do marido</label>
+      ${inp(p, 'coniuge', 'Sobrenome do cônjuge', 'c3')}
+      <div class="sub">Contato próprio (opcional — se vazio, usa o da família)</div>
+      ${inp(p, 'dddCel', 'DDD', 'c1 half', 'inputmode="numeric" maxlength="2"')}${inp(p, 'cel', 'Celular', 'c2 half', 'inputmode="tel"')}${inp(p, 'email', 'E-mail', 'c3', 'type="email" autocapitalize="off"')}
+      <div class="sub">Documento de identidade (para o atto di assenso)</div>
+      ${inp(p, 'docNum', 'Nº do documento', 'c2')}${inp(p, 'docLocal', 'Emitido em (local/órgão)', 'c2')}${inp(p, 'docData', 'Data de emissão', 'c2', 'inputmode="numeric" placeholder="dd/mm/aaaa" data-mask="date"')}
+    </div></div>`;
+  }).join('');
+}
+function renderM() {
+  const opts = (sel) => '<option value="">— nenhum —</option>' + S.adultos.map((a, i) => `<option value="${a.id}" ${a.id === sel ? 'selected' : ''}>${esc([a.nome, a.sobrenome].filter(Boolean).join(' ') || 'Adulto ' + (i + 1))}</option>`).join('');
+  const box = document.getElementById('menores');
+  box.innerHTML = S.menores.length ? S.menores.map((m, i) => {
+    const p = 'menores.' + i;
+    return `<div class="card"><header><h3>Menor ${i + 1} <small>${esc([m.nome, m.sobrenome].filter(Boolean).join(' '))}</small></h3><button class="del" data-delM="${i}">Remover</button></header>
+    <div class="grid">${pessoa(p)}
+      <label class="f c3">Pai<select data-k="${p}.pai">${opts(m.pai)}</select></label>
+      <label class="f c3">Mãe<select data-k="${p}.mae">${opts(m.mae)}</select></label>
+      <label class="chk c3"><input type="checkbox" data-k="${p}.assPai">Atto di assenso assinado pelo pai</label>
+      <label class="chk c3"><input type="checkbox" data-k="${p}.assMae">Atto di assenso assinado pela mãe</label>
+    </div></div>`;
+  }).join('') : '<p class="empty">Nenhum menor nesta família.</p>';
+}
+const get = (k) => k.split('.').reduce((o, x) => o?.[x], S);
+const set = (k, v) => { const ps = k.split('.'); const last = ps.pop(); ps.reduce((o, x) => o[x], S)[last] = v; };
+function bindValues(root = document) {
+  root.querySelectorAll('[data-k]').forEach((el) => {
+    const v = get(el.dataset.k);
+    if (el.type === 'checkbox') el.checked = !!v; else el.value = v ?? '';
+  });
+}
+function renderAll() { renderA(); renderM(); bindValues(); document.getElementById('adultos').classList.toggle('off', !!S.opts.soMenores); }
+function mask(el) {
+  let d = el.value.replace(/\D/g, '');
+  if (el.dataset.mask === 'date') { d = d.slice(0, 8); el.value = d.length > 4 ? `${d.slice(0, 2)}/${d.slice(2, 4)}/${d.slice(4)}` : d.length > 2 ? `${d.slice(0, 2)}/${d.slice(2)}` : d; }
+  if (el.dataset.mask === 'cep') { d = d.slice(0, 8); el.value = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d; }
+}
+function stale() { if (pdfBytes) { pdfBytes = null; document.getElementById('baixar').style.display = 'none'; msg('Dados alterados — gere o PDF de novo.'); } }
+const msg = (h, err) => { const m = document.getElementById('msg'); m.innerHTML = h; m.className = 'msg' + (err ? ' err' : ''); };
+
+document.addEventListener('input', (e) => {
+  const el = e.target; if (!el.dataset.k) return;
+  if (el.dataset.mask) mask(el);
+  set(el.dataset.k, el.type === 'checkbox' ? el.checked : el.value);
+  save(); stale();
+  if (/^adultos\.\d+\.(nome|sobrenome)$/.test(el.dataset.k)) { renderM(); bindValues(document.getElementById('menores')); }
+});
+document.addEventListener('change', (e) => { const el = e.target; if (el.dataset.k) { set(el.dataset.k, el.type === 'checkbox' ? el.checked : el.value); save(); stale(); if (el.dataset.k === 'opts.soMenores') document.getElementById('adultos').classList.toggle('off', el.checked); } });
+document.addEventListener('click', (e) => {
+  const t = e.target;
+  if (t.dataset.dela != null) { const id = S.adultos[+t.dataset.dela].id; S.adultos.splice(+t.dataset.dela, 1); S.menores.forEach((m) => { if (m.pai === id) m.pai = ''; if (m.mae === id) m.mae = ''; }); save(); stale(); renderAll(); }
+  if (t.dataset.delm != null) { S.menores.splice(+t.dataset.delm, 1); save(); stale(); renderAll(); }
+});
+document.getElementById('addA').onclick = () => { S.adultos.push(novoAdulto()); save(); renderAll(); };
+document.getElementById('addM').onclick = () => {
+  const m = novoMenor();
+  const h = S.adultos.find((a) => a.sexo === 'M'), f = S.adultos.find((a) => a.sexo === 'F');
+  if (h) m.pai = h.id; if (f) m.mae = f.id;
+  S.menores.push(m); save(); renderAll();
+};
+let confirmLimpar = false;
+document.getElementById('limpar').onclick = (e) => {
+  if (!confirmLimpar) { confirmLimpar = true; e.target.textContent = 'Toque de novo para confirmar'; setTimeout(() => { confirmLimpar = false; e.target.textContent = 'Nova família (limpar tudo)'; }, 4000); return; }
+  confirmLimpar = false; e.target.textContent = 'Nova família (limpar tudo)';
+  const opts = S.opts; S = vazio(); S.opts = { ...opts, dataAss: '', soMenores: false }; save(); stale(); renderAll();
+  document.getElementById('prevSec').style.display = 'none'; window.scrollTo(0, 0);
+};
+
+async function loadTemplate() {
+  try { const r = await fetch('fichas.pdf'); if (!r.ok) throw 0; template = new Uint8Array(await r.arrayBuffer()); }
+  catch (e) { document.getElementById('tpl').style.display = 'block'; }
+}
+document.getElementById('tplFile').onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  template = new Uint8Array(await f.arrayBuffer()); document.getElementById('tpl').style.display = 'none'; msg('Modelo carregado.');
+};
+
+async function preview(bytes) {
+  const sec = document.getElementById('prevSec'), box = document.getElementById('prev');
+  if (!window.pdfjsLib) { sec.style.display = 'none'; return; }
+  try {
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    const doc = await pdfjsLib.getDocument({ data: bytes.slice(0), isEvalSupported: false }).promise;
+    box.innerHTML = ''; sec.style.display = 'block';
+    for (let i = 1; i <= doc.numPages; i++) {
+      const pg = await doc.getPage(i); const vp = pg.getViewport({ scale: 1.6 });
+      const c = document.createElement('canvas'); c.width = vp.width; c.height = vp.height; box.appendChild(c);
+      await pg.render({ canvasContext: c.getContext('2d'), viewport: vp }).promise;
+    }
+  } catch (e) { sec.style.display = 'none'; }
+}
+const nomeArquivo = () => {
+  const a = S.adultos.find((x) => x.sobrenome) || S.menores.find((x) => x.sobrenome);
+  const base = a ? a.sobrenome.trim().split(/\s+/).pop() : 'familia';
+  return 'Fichas passaporte - ' + base.normalize('NFD').replace(/[̀-ͯ]/g, '') + '.pdf';
+};
+document.getElementById('gerar').onclick = async () => {
+  if (!window.PDFLib) return msg('A biblioteca de PDF não carregou. Verifique a internet e recarregue a página.', true);
+  if (!template) { await loadTemplate(); if (!template) return msg('Carregue o modelo em branco no topo da página.', true); }
+  msg('Gerando…');
+  try {
+    pdfBytes = await buildFichas(PDFLib, template, S);
+    const n = (await PDFLib.PDFDocument.load(pdfBytes)).getPageCount();
+    msg(`<b>${n} página${n > 1 ? 's' : ''}</b> pronta${n > 1 ? 's' : ''}. Confira a prévia e baixe.`);
+    document.getElementById('baixar').style.display = '';
+    preview(pdfBytes);
+  } catch (e) { msg(esc(e.message || e), true); }
+};
+let dl = null;
+document.getElementById('baixar').onclick = async () => {
+  if (!pdfBytes) return;
+  if (!dl) { const u = URL.createObjectURL(new Blob([pdfBytes], { type: 'application/pdf' })); const a = document.createElement('a'); a.href = u; a.download = nomeArquivo(); document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(u), 60000); msg('<b>PDF baixado.</b>'); return; }
+  try { await dl.save({ filename: nomeArquivo(), data: new Blob([pdfBytes], { type: 'application/pdf' }) }); msg('<b>PDF salvo.</b>'); }
+  catch (e) { msg(e && e.code === 'declined' ? 'Download cancelado.' : 'Não foi possível salvar: ' + esc(e && (e.message || e.code)), e && e.code !== 'declined'); }
+};
+(async () => { try { if (window.claude && claude.use) dl = await claude.use('downloads'); } catch (e) {} })();
+
+
+/* ---------- colar e organizar ---------- */
+let sample = null;
+(async () => { try { if (window.claude && claude.use) sample = await claude.use('sample'); } catch (e) {} })();
+const cmsg = (h, err) => { const m = document.getElementById('colarMsg'); m.innerHTML = h; m.className = 'hint' + (err ? ' err' : ''); };
+const PROMPT = `Você organiza dados de clientes de uma assessoria de cidadania italiana para preencher fichas de passaporte do Consulado da Itália em Belo Horizonte.
+Leia o texto colado no fim e responda SOMENTE com um JSON neste formato (omita campos sem informação; não invente nada):
+{"end":{"rua":"logradouro, número, complemento, bairro","cidade":"","uf":"MG","cep":"00000-000","ddd":"31","tel":"3333-4444","dddCel":"31","cel":"99999-8888","email":""},
+ "adultos":[{"sobrenome":"","nome":"","nascLocal":"Cidade - UF","nascData":"dd/mm/aaaa","altura":"1,70","olhos":"Castanhos","sexo":"M|F","estado":"solteiro|casado|divorciado|separado|viuvo|uniao","coniuge":"","usarConiuge":false,"filhosOpc":"auto|nao|sim","filhos":"","docNum":"","docLocal":"","docData":"dd/mm/aaaa","dddCel":"","cel":"","email":"","ficha":true}],
+ "menores":[{"sobrenome":"","nome":"","nascLocal":"Cidade - UF","nascData":"dd/mm/aaaa","altura":"","olhos":"","sexo":"M|F","pai":0,"mae":1}]}
+Regras:
+- "adultos" = maiores de 18 (requerentes e pais). "menores" = menores de 18; "pai"/"mae" = índice do adulto na lista "adultos" (ou null).
+- Pais citados só como genitores (sem pedir passaporte) entram em "adultos" com "ficha": false.
+- Se o texto indicar que o agendamento é só dos filhos menores, inclua "soMenores": true no nível de cima do JSON.
+- Nome x sobrenome: se o texto rotular, siga os rótulos. Sem rótulos, separe com cuidado: "nome" = prenome(s), incluindo nomes compostos (ex.: "Ana Luísa", "Marco Antônio", "Maria Clara", "João Pedro"), e "sobrenome" = os sobrenomes de família (ex.: "Souza Lima", "da Silva"). Nunca deixe o nome completo inteiro em "nome".
+- Mulher casada: "sobrenome" deve ser o de solteira se o texto o informar; o sobrenome do marido vai em "coniuge" com "usarConiuge": true só se ela pedir para incluí-lo.
+- "filhosOpc": "nao" se o texto disser que não tem filhos menores; "sim" (e "filhos" = quantidade) se disser que tem; senão "auto".
+- Telefones: separe DDD do número. Datas sempre dd/mm/aaaa. Altura em metros com vírgula (ex.: "1,65"; "165 cm" vira "1,65"). Olhos e local em português. Mantenha acentos.
+- Contato comum da família vai em "end"; contato diferente de um adulto vai nos campos dele.
+
+TEXTO:
+`;
+const norm = (t) => t.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+const soDig = (t) => (t || '').replace(/\D/g, '');
+const fmtData = (t) => { const m = /(\d{1,2})[\/.\- ](\d{1,2})[\/.\- ](\d{2,4})/.exec(t || ''); if (!m) return ''; let y = m[3]; if (y.length === 2) y = (+y > 30 ? '19' : '20') + y; return m[1].padStart(2, '0') + '/' + m[2].padStart(2, '0') + '/' + y; };
+const fone = (t) => { const d = soDig(t).replace(/^55(?=\d{10,11}$)/, ''); if (d.length >= 10) { const n = d.slice(2); return [d.slice(0, 2), n.length === 9 ? n.slice(0, 5) + '-' + n.slice(5) : n.slice(0, 4) + '-' + n.slice(4)]; } return ['', t.trim()]; };
+const PRENOMES = new Set('maria ana luisa luiza clara eduarda vitoria victoria julia beatriz helena alice laura sofia sophia cecilia isabel isabela isabella carolina gabriela leticia mariana teresa tereza aparecida rita lucia regina claudia rosa fernanda cristina paula carla luana luana lara livia vitor victor antonio pedro paulo carlos henrique augusto vicente miguel lucas rafael felipe eduardo fernando jose joao luiz luis marcos marco arthur artur davi guilherme matheus mateus bernardo gabriel gustavo ricardo roberto rodrigo otavio francisco manoel manuel alberto alexandre andre daniel diego enzo emanuel heitor hugo igor leonardo lorenzo murilo nicolas samuel thiago tiago vinicius benicio caio cesar'.split(' '));
+function splitNome(full) {
+  const w = full.trim().split(/\s+/);
+  if (w.length < 2) return [full.trim(), ''];
+  let n = 1;
+  while (n < w.length - 1 && PRENOMES.has(norm(w[n]))) n++;
+  return [w.slice(0, n).join(' '), w.slice(n).join(' ')];
+}
+const ROT = 'nome completo|nome|sobrenome|cognome|data de nascimento|nascimento|nascido em|local de nascimento|naturalidade|estado civil|endere[cç]o|bairro|cidade|uf|cep|celular|whatsapp|telefone|fone|e-?mail|altura|estatura|cor dos olhos|olhos|sexo|rg|identidade|documento|[oó]rg[aã]o emissor|data de emiss[aã]o|data de expedi[cç][aã]o|filhos menores|filhos';
+const reRot = new RegExp('^\\s*[-•*]?\\s*(' + ROT + ')\\s*[:\\-–]?\\s+(.+)$', 'i');
+function parseLocal(txt) {
+  const a = novoAdulto(), e = {};
+  let nomeCompleto = '';
+  for (const raw of txt.split(/\n/)) {
+    const line = raw.trim(); if (!line) continue;
+    let m = /^\s*[-•*]?\s*([^:]{2,40}):\s*(.+)$/.exec(line) || reRot.exec(line);
+    if (!m) {
+      // linha sem rótulo: tenta reconhecer pelo conteúdo
+      if (/@/.test(line) && !e.email) e.email = line.match(/\S+@\S+/)[0];
+      else if (/\b\d{5}-?\d{3}\b/.test(line) && /cep/i.test(line) === false && !/\d{4,5}-\d{4}/.test(line) && !e.cep) e.cep = soDig(line.match(/\d{5}-?\d{3}/)[0]).replace(/^(\d{5})(\d{3})$/, '$1-$2');
+      else if (/\(?\d{2}\)?\s*9?\d{4}-?\d{4}/.test(line) && !e.cel) [e.dddCel, e.cel] = fone(line);
+      else if (/^\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}$/.test(line) && !a.nascData) a.nascData = fmtData(line);
+      else if (!nomeCompleto && !a.nome && /^[A-Za-zÀ-ÿ'´ ]+$/.test(line) && line.split(/\s+/).length >= 2) nomeCompleto = line;
+      continue;
+    }
+    const k = norm(m[1]), v = m[2].trim();
+    if (/nome completo|^requerente/.test(k)) nomeCompleto = v;
+    else if (/sobrenome|cognome/.test(k)) a.sobrenome = v;
+    else if (/^nome/.test(k)) a.nome = v;
+    else if (/emiss|expedi/.test(k) && /data/.test(k)) a.docData = fmtData(v);
+    else if (/orgao|emissor|expedidor/.test(k)) a.docLocal = v;
+    else if (/^rg|identidade|documento|cpf/.test(k)) a.docNum = v;
+    else if (/nasc/.test(k) && /local|cidade|natural/.test(k) || /naturalidade/.test(k)) a.nascLocal = v.replace(/\s*\/\s*([A-Za-z]{2})$/, ' - $1');
+    else if (/nasc/.test(k)) { a.nascData = fmtData(v); const l = /\bem\s+(.+)$/i.exec(v); if (l) a.nascLocal = l[1].replace(/\s*\/\s*([A-Za-z]{2})$/, ' - $1'); }
+    else if (/cep/.test(k)) e.cep = soDig(v).replace(/^(\d{5})(\d{3})$/, '$1-$2');
+    else if (/bairro/.test(k)) e.rua = [e.rua, v].filter(Boolean).join(', ');
+    else if (/endere|rua|logradouro/.test(k)) { e.rua = [v.replace(/[,\s]*cep[\s:]*[\d.\-]+/i, ''), e.rua].filter(Boolean).join(', '); const c = /cep[\s:]*([\d.\-]{8,10})/i.exec(v); if (c) e.cep = soDig(c[1]).replace(/^(\d{5})(\d{3})$/, '$1-$2'); }
+    else if (/cidade/.test(k)) { const [c, u] = v.split(/\s*[\/\-]\s*/); e.cidade = c; if (u && u.length === 2) e.uf = u.toUpperCase(); }
+    else if (/^uf$|^estado$/.test(k) && v.length === 2) e.uf = v.toUpperCase();
+    else if (/estado civil/.test(k)) { const n = norm(v); a.estado = /uniao|estavel/.test(n) ? 'uniao' : /casad/.test(n) ? 'casado' : /divorc/.test(n) ? 'divorciado' : /separad/.test(n) ? 'separado' : /viuv/.test(n) ? 'viuvo' : /solteir/.test(n) ? 'solteiro' : ''; }
+    else if (/e-?mail/.test(k)) e.email = v;
+    else if (/cel|whats|zap/.test(k)) [e.dddCel, e.cel] = fone(v);
+    else if (/tel|fone/.test(k)) [e.ddd, e.tel] = fone(v);
+    else if (/altura|estatura/.test(k)) a.altura = altura(v);
+    else if (/olho/.test(k)) a.olhos = v.charAt(0).toUpperCase() + v.slice(1);
+    else if (/sexo/.test(k)) a.sexo = /^f/i.test(v) ? 'F' : /^m/i.test(v) ? 'M' : '';
+    else if (/filho/.test(k)) { const n = norm(v); if (/^nao|nenhum|^0/.test(n)) a.filhosOpc = 'nao'; else { a.filhosOpc = 'sim'; a.filhos = soDig(v); } }
+  }
+  // nome: se veio tudo junto (em "Nome completo", sem rótulo, ou em "Nome" sem "Sobrenome"), separa
+  if (nomeCompleto && !a.nome) [a.nome, a.sobrenome] = a.sobrenome ? [nomeCompleto.replace(new RegExp('\\s*' + a.sobrenome.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\s*$', 'i'), ''), a.sobrenome] : splitNome(nomeCompleto);
+  else if (a.nome && !a.sobrenome && a.nome.trim().split(/\s+/).length >= 2) [a.nome, a.sobrenome] = splitNome(a.nome);
+  return { end: e, adultos: (a.nome || a.sobrenome) ? [a] : [], menores: [] };
+}
+function altura(v) {
+  let t = v.replace(/,/g, '.').replace(/[^\d.]/g, '');
+  if (!t) return v.trim();
+  let n = parseFloat(t); if (n > 3) n = n / 100;
+  return n.toFixed(2).replace('.', ',');
+}
+function aplicar(d, nova) {
+  if (nova) { const opts = S.opts; S = vazio(); S.opts = { ...opts, soMenores: false }; S.adultos = []; }
+  else if (S.adultos.length === 1 && !S.adultos[0].nome && !S.adultos[0].sobrenome) S.adultos = [];
+  const str = (v) => (v == null ? '' : String(v));
+  for (const [k, v] of Object.entries(d.end || {})) if (k in S.end && str(v).trim() && (nova || !S.end[k])) S.end[k] = str(v).trim();
+  const base = S.adultos.length, ids = [];
+  for (const x of d.adultos || []) {
+    const a = novoAdulto();
+    for (const k of Object.keys(a)) if (k !== 'id' && x[k] != null && x[k] !== '') a[k] = typeof a[k] === 'boolean' ? !!x[k] : str(x[k]);
+    if (!['auto', 'nao', 'sim'].includes(a.filhosOpc)) a.filhosOpc = 'auto';
+    ids.push(a.id); S.adultos.push(a);
+  }
+  for (const x of d.menores || []) {
+    const m = novoMenor();
+    for (const k of ['sobrenome', 'nome', 'nascLocal', 'nascData', 'altura', 'olhos', 'sexo']) if (x[k] != null) m[k] = str(x[k]);
+    if (Number.isInteger(x.pai) && ids[x.pai]) m.pai = ids[x.pai];
+    if (Number.isInteger(x.mae) && ids[x.mae]) m.mae = ids[x.mae];
+    S.menores.push(m);
+  }
+  if (d.soMenores === true) S.opts.soMenores = true;
+  if (!S.adultos.length) S.adultos.push(novoAdulto());
+  save(); stale(); renderAll();
+  return [(d.adultos || []).length, (d.menores || []).length];
+}
+document.getElementById('organizar').onclick = async (ev) => {
+  const txt = document.getElementById('colar').value.trim();
+  if (!txt) return cmsg('Cole o texto primeiro.', true);
+  const btn = ev.target, nova = document.getElementById('colarNova').checked;
+  btn.disabled = true;
+  let d = null, via = 'claude';
+  if (sample) {
+    cmsg('Organizando com o Claude…');
+    try { d = await sample.json(PROMPT + txt.slice(0, 20000), { modelTier: 'default' }); }
+    catch (e) {
+      if (['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed'].includes(e.code)) sample = null;
+      if (e.code === 'rate_limited') { btn.disabled = false; return cmsg('Muitas solicitações seguidas. Espere um pouco e tente de novo.', true); }
+    }
+  }
+  if (!d || typeof d !== 'object') { d = parseLocal(txt); via = 'local'; }
+  const [na, nm] = aplicar(d, nova);
+  btn.disabled = false;
+  if (!na && !nm && !Object.keys(d.end || {}).length) return cmsg('Não reconheci dados nesse texto. Use o formato "Campo: valor", um por linha.', true);
+  cmsg(`<b>${na} adulto${na === 1 ? '' : 's'}${nm ? ` e ${nm} menor${nm === 1 ? '' : 'es'}` : ''}</b> preenchido${na + nm === 1 ? '' : 's'}${via === 'local' ? ' (leitura simples por "Campo: valor")' : ''}. Confira os campos abaixo.`);
+};
+
+const dlist = document.createElement('datalist'); dlist.id = 'olhos'; dlist.innerHTML = OLHOS.map((o) => `<option value="${o}">`).join(''); document.body.appendChild(dlist);
+renderAll(); loadTemplate();
+}
+</script>
+</body>
+</html>
